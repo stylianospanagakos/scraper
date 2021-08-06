@@ -57,6 +57,8 @@ class RightmoveScraper extends Command
         // crawl data
         $this->crawl($postcode);
 
+        dd($this->properties);
+
         return 0;
     }
 
@@ -125,24 +127,54 @@ class RightmoveScraper extends Command
         // loop through properties to construct list
         foreach ($data['results']['properties'] as $property) {
             // get display price
-            $displayPrice = $property['transactions'][0]['displayPrice'];
+            $lastTransaction = $property['transactions'][0];
+
+            // only include the last 10 years
+            if (!$this->isDateInYearRange($lastTransaction['dateSold'])) {
+                continue;
+            }
 
             $this->properties[] = [
                 'address' => $property['address'],
                 'type' => $property['propertyType'],
-                'displayPrice' => $displayPrice,
-                'price' => $this->formatPrice($displayPrice)
+                'displayPrice' => $lastTransaction['displayPrice'],
+                'price' => $this->formatPrice($lastTransaction['displayPrice'])
             ];
         }
 
         // if there are more results, keep crawling
         if ($this->pagination['current'] < $this->pagination['last']) {
-
+            $this->crawl($postcode, $this->pagination['current'] + 1);
         }
     }
 
-    protected function formatPrice(string $displayPrice): float
+    /**
+     * Check if date falls within year range.
+     *
+     * @param string $date
+     * @param int $range
+     * @return bool
+     */
+    protected function isDateInYearRange(string $date, int $range = 10): bool
     {
-        return (float) str_replace('&pound;', '', $displayPrice);
+        // calculate difference in years
+        $endDate = time();
+        $startDate = strtotime($date);
+        $diff = floor(($endDate - $startDate) / (365 * 24 * 60 * 60));
+        return $diff <= $range;
+    }
+
+    /**
+     * Format string to fully numeric value.
+     *
+     * @param string $displayPrice
+     * @return int
+     */
+    protected function formatPrice(string $displayPrice): int
+    {
+        return (int) filter_var(
+            str_replace('&pound;', '', $displayPrice),
+            FILTER_SANITIZE_NUMBER_INT
+        );
     }
 }
