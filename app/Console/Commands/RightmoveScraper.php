@@ -241,6 +241,10 @@ class RightmoveScraper extends Command
         $collection = collect($this->properties);
         $this->topFiveExpensive = $collection->sortByDesc('price')
             ->take(5)
+            ->map(function ($item) {
+                $item['price'] = '£' . number_format($item['price']);
+                return $item;
+            })
             ->toArray();
     }
 
