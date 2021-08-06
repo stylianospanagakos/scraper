@@ -3,11 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Rules\FullPostcode;
+use Goutte\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 
 class RightmoveScraper extends Command
 {
+    const REQUEST_URL = 'https://www.rightmove.co.uk/house-prices/';
     /**
      * The name and signature of the console command.
      *
@@ -39,9 +41,10 @@ class RightmoveScraper extends Command
      */
     public function handle()
     {
+        // get postcode
         $postcode = $this->askPostcode();
-
-        dd($postcode);
+        // crawl data
+        $this->crawl($postcode);
 
         return 0;
     }
@@ -80,5 +83,28 @@ class RightmoveScraper extends Command
         return $validator->fails()
             ? $validator->errors()->first('postcode')
             : null;
+    }
+
+    protected function crawl($postcode)
+    {
+        $client = new Client();
+        $crawler = $client->request('GET', self::REQUEST_URL . $postcode . '.html');
+
+        // Filter script tags
+        $scripts = $crawler->filter('script')->each(function ($node) {
+            return $node->text();
+        });
+
+        // get preloaded data
+        $data = json_decode(
+            str_replace('window.__PRELOADED_STATE__ = ', '', $scripts[1]),
+            true
+        );
+
+        // destructure data
+        ['resultCount' => $resultCount, 'properties' => $properties] = $data['results'];
+        ['pagination' => $pagination] = $data;
+
+        dd($resultCount, $properties, $pagination);
     }
 }
