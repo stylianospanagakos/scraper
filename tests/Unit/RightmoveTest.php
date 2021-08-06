@@ -13,7 +13,7 @@ class RightmoveTest extends TestCase
      *
      * @return void
      */
-    public function test_value_entered_is_postcode()
+    public function test_postcode_regex_supports_uk_formats()
     {
         // list all possible UK postcode formats
         // https://en.wikipedia.org/wiki/Postcodes_in_the_United_Kingdom
@@ -28,5 +28,49 @@ class RightmoveTest extends TestCase
         }
 
         $this->assertTrue($output);
+    }
+
+    /**
+     * Test if postcode regex detects invalid formats.
+     *
+     * @return void
+     */
+    public function test_postcode_regex_detects_invalid_formats()
+    {
+        $invalid = [null, 1231, 'sdkjasd'];
+        $output = true;
+        foreach ($invalid as $item) {
+            $output = $output && !(bool) preg_match(FullPostcode::UK_REGEX, $item);
+        }
+
+        $this->assertTrue($output);
+    }
+
+    /**
+     * Test if date is within the default range.
+     *
+     * @return void
+     */
+    public function test_date_is_in_10_year_range()
+    {
+        $this->assertTrue(
+            (new RightmoveScraper())->isDateInYearRange(
+                date('Y-m-d H:i:s', strtotime('-6 year'))
+            )
+        );
+    }
+
+    /**
+     * Test if date is outside the default range.
+     *
+     * @return void
+     */
+    public function test_date_outside_range()
+    {
+        $this->assertFalse(
+            (new RightmoveScraper())->isDateInYearRange(
+                date('Y-m-d H:i:s', strtotime('-11 years'))
+            )
+        );
     }
 }

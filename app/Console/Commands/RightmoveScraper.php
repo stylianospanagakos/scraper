@@ -130,7 +130,7 @@ class RightmoveScraper extends Command
      * @param string $value
      * @return string|null
      */
-    public function hasPostcodeError(string $value)
+    protected function hasPostcodeError(string $value)
     {
         $validator = Validator::make([
             'postcode' => $value
