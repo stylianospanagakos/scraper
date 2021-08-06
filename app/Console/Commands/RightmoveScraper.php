@@ -67,7 +67,7 @@ class RightmoveScraper extends Command
         // crawl data
         $this->crawl($postcode);
 
-        dd($this->properties);
+        dd($this->properties, $this->pagination, $this->resultCount);
 
         return 0;
     }
@@ -147,7 +147,8 @@ class RightmoveScraper extends Command
                 'address' => $property['address'],
                 'type' => $property['propertyType'],
                 'displayPrice' => $lastTransaction['displayPrice'],
-                'price' => $this->formatPrice($lastTransaction['displayPrice'])
+                'price' => $this->formatPrice($lastTransaction['displayPrice']),
+                'dateSold' => $lastTransaction['dateSold']
             ];
 
             // increase result count
