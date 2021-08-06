@@ -6,6 +6,7 @@ use App\Rules\FullPostcode;
 use Goutte\Client;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\Console\Helper\ProgressBar;
 
 class RightmoveScraper extends Command
 {
@@ -23,6 +24,13 @@ class RightmoveScraper extends Command
      * @var string
      */
     protected $description = 'Crawl rightmove.co.uk to fetch property data for the last 10 years';
+
+    /**
+     * The progress bar.
+     *
+     * @var ProgressBar
+     */
+    protected $progressBar = null;
 
     /**
      * The fetched properties.
@@ -65,6 +73,12 @@ class RightmoveScraper extends Command
         // crawl data
         $this->crawl($this->askPostcode());
 
+        // stop progress bar
+        if ($this->progressBar) {
+            $this->progressBar->finish();
+        }
+
+        // format output
         $this->formatResponse();
 
         return 0;
@@ -106,7 +120,14 @@ class RightmoveScraper extends Command
             : null;
     }
 
-    protected function crawl(string $postcode, int $page = 1)
+    /**
+     * Crawl through rightmove for specific postcode and page.
+     *
+     * @param string $postcode
+     * @param int $page
+     * @return void
+     */
+    protected function crawl(string $postcode, int $page = 1): void
     {
         $client = new Client();
         $crawler = $client->request('GET', self::REQUEST_URL . $postcode . '.html?page=' . $page);
@@ -124,7 +145,13 @@ class RightmoveScraper extends Command
 
         // only need to set pagination for first page crawling
         if ($page === 1) {
+            $this->resultCount = $data['results']['resultCount'];
             $this->pagination = $data['pagination'];
+            // start progress bar only for paginated results
+            if ($this->pagination['first'] !== $this->pagination['last']) {
+                $this->progressBar = $this->output->createProgressBar($this->pagination['last']);
+                $this->progressBar->start();
+            }
         } else {
             // else, just update the current page
             $this->pagination['current'] = $data['pagination']['current'];
@@ -148,9 +175,11 @@ class RightmoveScraper extends Command
                 'price' => $this->formatPrice($lastTransaction['displayPrice']),
                 'dateSold' => $lastTransaction['dateSold']
             ];
+        }
 
-            // increase result count
-            $this->resultCount++;
+        // advance progress bar if exists
+        if ($this->progressBar) {
+            $this->progressBar->advance();
         }
 
         // if there are more results, keep crawling
