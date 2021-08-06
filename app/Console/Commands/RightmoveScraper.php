@@ -11,14 +11,14 @@ class RightmoveScraper extends Command
      *
      * @var string
      */
-    protected $signature = 'command:name';
+    protected $signature = 'rightmove:crawl';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Crawl rightmove.co.uk to fetch property data for the last 10 years';
 
     /**
      * Create a new command instance.
