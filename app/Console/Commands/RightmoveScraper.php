@@ -130,7 +130,7 @@ class RightmoveScraper extends Command
      * @param string $value
      * @return string|null
      */
-    protected function hasPostcodeError(string $value)
+    public function hasPostcodeError(string $value)
     {
         $validator = Validator::make([
             'postcode' => $value
@@ -219,7 +219,7 @@ class RightmoveScraper extends Command
      * @param int $range
      * @return bool
      */
-    protected function isDateInYearRange(string $date, int $range = 10): bool
+    public function isDateInYearRange(string $date, int $range = 10): bool
     {
         // calculate difference in years
         $endDate = time();
@@ -234,7 +234,7 @@ class RightmoveScraper extends Command
      * @param string $displayPrice
      * @return int
      */
-    protected function formatPrice(string $displayPrice): int
+    public function formatPrice(string $displayPrice): int
     {
         return (int) filter_var(
             str_replace('&pound;', '', $displayPrice),
