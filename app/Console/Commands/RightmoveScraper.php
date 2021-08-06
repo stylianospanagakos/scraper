@@ -31,8 +31,18 @@ class RightmoveScraper extends Command
      */
     protected $properties = [];
 
+    /**
+     * The pagination attributes.
+     *
+     * @var array
+     */
     protected $pagination = [];
 
+    /**
+     * The total number of properties.
+     *
+     * @var int
+     */
     protected $resultCount = 0;
 
     /**
@@ -114,10 +124,8 @@ class RightmoveScraper extends Command
             true
         );
 
-        // set pagination and result count
-        // only need to set result count and pagination for first page crawling
+        // only need to set pagination for first page crawling
         if ($page === 1) {
-            $this->resultCount = $data['results']['resultCount'];
             $this->pagination = $data['pagination'];
         } else {
             // else, just update the current page
@@ -134,12 +142,16 @@ class RightmoveScraper extends Command
                 continue;
             }
 
+            // update properties list
             $this->properties[] = [
                 'address' => $property['address'],
                 'type' => $property['propertyType'],
                 'displayPrice' => $lastTransaction['displayPrice'],
                 'price' => $this->formatPrice($lastTransaction['displayPrice'])
             ];
+
+            // increase result count
+            $this->resultCount++;
         }
 
         // if there are more results, keep crawling
