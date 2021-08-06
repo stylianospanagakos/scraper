@@ -258,11 +258,13 @@ class RightmoveScraper extends Command
         $this->newLine(2);
         $this->line('The total number of sold properties for the requested postcode was ' . $this->resultCount . '.');
         $this->newLine();
-        $this->line('Here is a list of the 5 most expensive properties sold in the last 10 years:');
-        $this->newLine();
-        $this->table(
-            ['Address', 'Type', 'Price', 'Date Sold'],
-            $this->topFiveExpensive
-        );
+        if ($this->resultCount > 0) {
+            $this->line('Here is a list of the 5 most expensive properties sold in the last 10 years:');
+            $this->newLine();
+            $this->table(
+                ['Address', 'Type', 'Price', 'Date Sold'],
+                $this->topFiveExpensive
+            );
+        }
     }
 }
