@@ -62,12 +62,10 @@ class RightmoveScraper extends Command
      */
     public function handle()
     {
-        // get postcode
-        $postcode = $this->askPostcode();
         // crawl data
-        $this->crawl($postcode);
+        $this->crawl($this->askPostcode());
 
-        dd($this->properties, $this->pagination, $this->resultCount);
+        $this->formatResponse();
 
         return 0;
     }
@@ -188,6 +186,19 @@ class RightmoveScraper extends Command
         return (int) filter_var(
             str_replace('&pound;', '', $displayPrice),
             FILTER_SANITIZE_NUMBER_INT
+        );
+    }
+
+    /**
+     * Format response.
+     *
+     * @return void
+     */
+    protected function formatResponse(): void
+    {
+        $this->table(
+            ['Address', 'Type', 'Display Price', 'Price', 'Date Sold'],
+            $this->properties
         );
     }
 }
