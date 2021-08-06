@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Rules\FullPostcode;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
 
 class RightmoveScraper extends Command
 {
@@ -37,6 +39,46 @@ class RightmoveScraper extends Command
      */
     public function handle()
     {
+        $postcode = $this->askPostcode();
+
+        dd($postcode);
+
         return 0;
+    }
+
+    /**
+     * Get postcode entry.
+     *
+     * @return string
+     */
+    protected function askPostcode(): string
+    {
+        $postcode = $this->ask('Enter the postcode you want to fetch information for');
+
+        if ($error = $this->hasPostcodeError($postcode)) {
+            $this->error($error);
+            $this->askPostcode();
+        }
+
+        return $postcode;
+    }
+
+    /**
+     * Validate postcode.
+     *
+     * @param string $value
+     * @return string|null
+     */
+    protected function hasPostcodeError(string $value)
+    {
+        $validator = Validator::make([
+            'postcode' => $value
+        ], [
+            'postcode' => new FullPostcode()
+        ]);
+
+        return $validator->fails()
+            ? $validator->errors()->first('postcode')
+            : null;
     }
 }
