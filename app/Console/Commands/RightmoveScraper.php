@@ -10,7 +10,11 @@ use Symfony\Component\Console\Helper\ProgressBar;
 
 class RightmoveScraper extends Command
 {
+    /**
+     * @var string
+     */
     const REQUEST_URL = 'https://www.rightmove.co.uk/house-prices/';
+
     /**
      * The name and signature of the console command.
      *
@@ -38,6 +42,13 @@ class RightmoveScraper extends Command
      * @var array
      */
     protected $properties = [];
+
+    /**
+     * Top 5 most expensive properties
+     *
+     * @var array
+     */
+    protected $topFiveExpensive = [];
 
     /**
      * The pagination attributes.
@@ -68,10 +79,13 @@ class RightmoveScraper extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         // crawl data
         $this->crawl($this->askPostcode());
+
+        // extract top 5 expensive
+        $this->getTop5Expensive();
 
         // stop progress bar
         if ($this->progressBar) {
@@ -79,7 +93,7 @@ class RightmoveScraper extends Command
         }
 
         // format output
-        $this->formatResponse();
+        $this->showOutput();
 
         return 0;
     }
@@ -171,7 +185,6 @@ class RightmoveScraper extends Command
             $this->properties[] = [
                 'address' => $property['address'],
                 'type' => $property['propertyType'],
-                'displayPrice' => $lastTransaction['displayPrice'],
                 'price' => $this->formatPrice($lastTransaction['displayPrice']),
                 'dateSold' => $lastTransaction['dateSold']
             ];
@@ -219,15 +232,33 @@ class RightmoveScraper extends Command
     }
 
     /**
+     * Extract the top 5 most expensive properties
+     *
+     * @return void
+     */
+    protected function getTop5Expensive(): void
+    {
+        $collection = collect($this->properties);
+        $this->topFiveExpensive = $collection->sortByDesc('price')
+            ->take(5)
+            ->toArray();
+    }
+
+    /**
      * Format response.
      *
      * @return void
      */
-    protected function formatResponse(): void
+    protected function showOutput(): void
     {
+        $this->newLine(2);
+        $this->line('The total number of sold properties for the requested postcode was ' . $this->resultCount . '.');
+        $this->newLine();
+        $this->line('Here is a list of the 5 most expensive properties sold in the last 10 years:');
+        $this->newLine();
         $this->table(
-            ['Address', 'Type', 'Display Price', 'Price', 'Date Sold'],
-            $this->properties
+            ['Address', 'Type', 'Price', 'Date Sold'],
+            $this->topFiveExpensive
         );
     }
 }
