@@ -8,6 +8,13 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Console\Helper\ProgressBar;
 
+/**
+ * Class RightmoveScraper
+ * @package App\Console\Commands
+ *
+ * @TODO create Crawling Service class to be consumed by the console command.
+ * @TODO Service instance can be generated out of a factory in case different implementations are required in the future.
+ */
 class RightmoveScraper extends Command
 {
     /**
@@ -102,6 +109,8 @@ class RightmoveScraper extends Command
      * Get postcode entry.
      *
      * @return string
+     *
+     * @TODO Add ability to specify value for top expensive results in output - now is statically set to 5
      */
     protected function askPostcode(): string
     {
@@ -140,6 +149,8 @@ class RightmoveScraper extends Command
      * @param string $postcode
      * @param int $page
      * @return void
+     *
+     * @TODO add silent error handling to support failed request
      */
     protected function crawl(string $postcode, int $page = 1): void
     {
