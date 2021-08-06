@@ -25,6 +25,17 @@ class RightmoveScraper extends Command
     protected $description = 'Crawl rightmove.co.uk to fetch property data for the last 10 years';
 
     /**
+     * The fetched properties.
+     *
+     * @var array
+     */
+    protected $properties = [];
+
+    protected $pagination = [];
+
+    protected $resultCount = 0;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -85,10 +96,10 @@ class RightmoveScraper extends Command
             : null;
     }
 
-    protected function crawl($postcode)
+    protected function crawl(string $postcode, int $page = 1)
     {
         $client = new Client();
-        $crawler = $client->request('GET', self::REQUEST_URL . $postcode . '.html');
+        $crawler = $client->request('GET', self::REQUEST_URL . $postcode . '.html?page=' . $page);
 
         // Filter script tags
         $scripts = $crawler->filter('script')->each(function ($node) {
@@ -101,10 +112,37 @@ class RightmoveScraper extends Command
             true
         );
 
-        // destructure data
-        ['resultCount' => $resultCount, 'properties' => $properties] = $data['results'];
-        ['pagination' => $pagination] = $data;
+        // set pagination and result count
+        // only need to set result count and pagination for first page crawling
+        if ($page === 1) {
+            $this->resultCount = $data['results']['resultCount'];
+            $this->pagination = $data['pagination'];
+        } else {
+            // else, just update the current page
+            $this->pagination['current'] = $data['pagination']['current'];
+        }
 
-        dd($resultCount, $properties, $pagination);
+        // loop through properties to construct list
+        foreach ($data['results']['properties'] as $property) {
+            // get display price
+            $displayPrice = $property['transactions'][0]['displayPrice'];
+
+            $this->properties[] = [
+                'address' => $property['address'],
+                'type' => $property['propertyType'],
+                'displayPrice' => $displayPrice,
+                'price' => $this->formatPrice($displayPrice)
+            ];
+        }
+
+        // if there are more results, keep crawling
+        if ($this->pagination['current'] < $this->pagination['last']) {
+
+        }
+    }
+
+    protected function formatPrice(string $displayPrice): float
+    {
+        return (float) str_replace('&pound;', '', $displayPrice);
     }
 }
