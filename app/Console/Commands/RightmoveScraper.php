@@ -162,6 +162,11 @@ class RightmoveScraper extends Command
             return $node->text();
         });
 
+        // if empty, exit
+        if (count($scripts) === 0) {
+            return;
+        }
+
         // get preloaded data
         $data = json_decode(
             str_replace('window.__PRELOADED_STATE__ = ', '', $scripts[1]),
