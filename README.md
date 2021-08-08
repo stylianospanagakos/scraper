@@ -11,4 +11,4 @@ In order to run the application, go to the root directory of the application and
 
 ## Tests
 
-You can validate the available unit tests by running `php artisan test`.
+You can validate the available unit tests by running `php artisan test --testsuite=Unit`.
